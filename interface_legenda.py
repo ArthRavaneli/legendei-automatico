@@ -6,14 +6,23 @@ import torch
 import os
 import math
 import sys
-import re  # <--- IMPORTANTE: Adicionado para achar a porcentagem
+import re
+import ctypes
 from deep_translator import GoogleTranslator
+
+# --- FUNÇÃO AUXILIAR PARA ARQUIVOS NO EXE ---
+def resource_path(relative_path):
+    """ Retorna o caminho absoluto, funcionando tanto para dev quanto para PyInstaller """
+    try:
+        # PyInstaller cria uma pasta temporária e armazena o caminho em _MEIPASS
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
+
+    return os.path.join(base_path, relative_path)
 
 # --- FEEDBACK VISUAL ---
 class RedirecionadorTexto:
-    """
-    Captura o texto que iria para o console e filtra porcentagens para a interface.
-    """
     def __init__(self, widget_var, root):
         self.widget_var = widget_var
         self.root = root
@@ -24,19 +33,13 @@ class RedirecionadorTexto:
 
     def _atualizar_label(self, text):
         texto_limpo = text.replace("\r", "").replace("\n", "").strip()
-        
-        # Ignora textos muito curtos (lixo de buffer)
         if len(texto_limpo) < 3: return
 
-        # 1. Tenta achar uma porcentagem (Ex: 15%, 99%)
         match_porcentagem = re.search(r"(\d{1,3})%", texto_limpo)
         
         if match_porcentagem:
-            # Se achou porcentagem, atualiza com destaque
             porcentagem = match_porcentagem.group(1)
             self.widget_var.set(f"⏳ Transcrevendo... {porcentagem}%")
-        
-        # 2. Se não for porcentagem, mas for aviso de Download
         elif "Downloading" in texto_limpo or "it/s" in texto_limpo:
              self.widget_var.set(f"📥 Baixando arquivos: {texto_limpo[:30]}...")
 
@@ -74,14 +77,17 @@ class LegendadorApp:
         self.root.geometry("740x760")
         self.root.configure(bg=CORES["bg"])
         
-        # --- CONFIGURAÇÃO DO ÍCONE ---
-        # Tenta carregar o ícone 'icone.ico'. Se não achar, usa o padrão do sistema.
+        # --- CONFIGURAÇÃO DO ÍCONE (Barra de Tarefas e Janela) ---
+        # 1. Define um ID único para o Windows não agrupar com o Python genérico
+        myappid = 'legendador.ia.whisper.v1' 
+        ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
+        
+        # 2. Carrega o ícone usando o resource_path (compatível com EXE)
         try:
-            # Certifique-se que o arquivo 'icone.ico' está na mesma pasta do script
-            if os.path.exists("icone.ico"):
-                self.root.iconbitmap("icone.ico")
+            icon_path = resource_path("icone.ico")
+            self.root.iconbitmap(icon_path)
         except Exception as e:
-            print(f"Aviso: Ícone não encontrado ({e})")
+            print(f"Aviso: Ícone não carregado: {e}")
 
         self.style = ttk.Style()
         self.style.theme_use('clam')
@@ -198,7 +204,7 @@ class LegendadorApp:
     def atualizar_info_modelo(self, event=None):
         modelo = self.model_var.get()
         descricao = INFO_MODELOS.get(modelo, "")
-        self.info_modelo_txt.set(f'🛈 SOBRE O MODELO "{modelo.upper()}":\n{descricao}')
+        self.info_modelo_txt.set(f"ℹ️ SOBRE O MODELO '{modelo.upper()}':\n{descricao}")
 
     def log(self, mensagem):
         self.log_area.config(state='normal')
@@ -273,7 +279,6 @@ class LegendadorApp:
             model = whisper.load_model(model_name, device=device)
             
             # ATENÇÃO: Mantemos o redirecionamento de stderr ATIVO durante o transcribe
-            # pois é por lá que o whisper (tqdm) manda a barra de porcentagem
             self.status_sistema_var.set("IA Carregada! Ouvindo áudio...")
             
             if self.stop_event.is_set(): raise Exception("Cancelado antes da transcrição.")
@@ -281,11 +286,8 @@ class LegendadorApp:
             lang_code_src = LANGUAGES[lang_origem_nome]
             self.log(f"Iniciando Transcrição em {lang_origem_nome}...")
             
-            # verbose=False faz o whisper usar barra de progresso (tqdm) no stderr
-            # verbose=True faz ele imprimir texto linha a linha
             result = model.transcribe(video_file, fp16=False, language=lang_code_src, verbose=False)
             
-            # Restaura console apenas após terminar a parte pesada
             sys.stderr = stderr_original
 
             if self.stop_event.is_set(): raise Exception("Cancelado após transcrição.")
