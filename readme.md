@@ -2,8 +2,9 @@
 
 Um aplicativo de desktop robusto desenvolvido em Python para gerar e traduzir legendas de vídeos automaticamente usando a inteligência artificial **OpenAI Whisper**.
 
-![Tela Principal do Programa](./screenshots/tela_principal.png)
-*(Coloque um print da tela inicial aqui)*
+<p align="center">
+  <img src="imagens_readme/Interface principal.png" width="90%">
+</p>
 
 ## ✨ Funcionalidades
 
@@ -25,8 +26,6 @@ Para rodar este projeto, você precisará de:
 2.  **FFmpeg** (Essencial para processamento de áudio).
 3.  **Drivers NVIDIA (Opcional):** Se desejar usar a GPU, instale o [CUDA Toolkit](https://developer.nvidia.com/cuda-downloads).
 
-![Exemplo de Transcrição](./screenshots/exemplo_funcionamento.png)
-*(Coloque um print do programa rodando/log aqui)*
 
 ---
 

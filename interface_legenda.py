@@ -204,7 +204,7 @@ class LegendadorApp:
     def atualizar_info_modelo(self, event=None):
         modelo = self.model_var.get()
         descricao = INFO_MODELOS.get(modelo, "")
-        self.info_modelo_txt.set(f"ℹ️ SOBRE O MODELO '{modelo.upper()}':\n{descricao}")
+        self.info_modelo_txt.set(f'🛈 SOBRE O MODELO "{modelo.upper()}":\n{descricao}')
 
     def log(self, mensagem):
         self.log_area.config(state='normal')
