@@ -15,6 +15,7 @@ Aplicação desktop para gerar e traduzir legendas automaticamente utilizando a 
 - **Transcrição e Tradução:** Converta áudio em legendas traduzidas.
 - **Flexibilidade:** Escolha entre precisão (modelo `Large`) ou velocidade (modelo `Tiny`).
 - **Controle:** Interface com logs detalhados, suporte a GPU e cancelamento seguro.
+- **Escalabilidade:** Capaz de legendar em lote, pastas inteiras de arquivos de video.
 
 ---
 
